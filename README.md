@@ -1,27 +1,38 @@
 # blogs
 
-Static blog, deployed to [assokhi.github.io/blogs](https://assokhi.github.io/blogs/).
-No backend, no database — Next.js (`output: "export"`) renders a folder of `.mdx`
-files to static HTML, and GitHub Actions publishes `out/` to GitHub Pages on every
-push to `main`.
+Content-only repo synced to Hashnode via the Hashnode GitHub app. No build step, no site generator.
 
-## Writing a post
+## Setup
+1. Hashnode → Dashboard → your blog → GitHub → install the app on this repo, pick the branch.
+2. Push posts. Hashnode publishes them; edits in its web editor commit back here.
 
-1. Add `posts/your-slug.mdx`
-2. Add frontmatter:
-   ```md
-   ---
-   title: "Your title"
-   date: "2026-10-03"
-   description: "One line for the index page."
-   ---
-   ```
-3. Write the post below the frontmatter in Markdown/MDX.
-4. `git push` — the post is live at `/blogs/your-slug/` once the workflow finishes.
+## Rules (from Hashnode docs; verify against the app's setup screen)
+- One post = one `.md` file in the **repo root**. Subfolders are ignored, so anything that is
+  not a post (drafts, notes, templates) goes in a subfolder.
+- Frontmatter: `title`, `slug`, `tags` (comma-separated tag slugs, max 5), `domain`
+  (your `*.hashnode.dev` or custom domain), optional `cover` (image URL).
+- Same `slug` = update the existing post. Change both file path and slug = new post.
+- Images: Hashnode's docs say to use URLs from its uploader. Relative paths into `images/`
+  are unverified. Test with one post before relying on them.
+- Unverified: whether Hashnode renders `mermaid` blocks and `> [!NOTE]` callouts. Check the preview.
 
-## Local dev
+## Post template
+```md
+---
+title: Your title
+slug: your-slug
+tags: testing, programming
+domain: assokhi.hashnode.dev
+cover: https://cdn.hashnode.com/...
+---
 
-```bash
-npm install
-npm run dev
+Intro paragraph.
+
+## Section
+
+Body.
 ```
+
+## Workflow
+One Claude session per post. Pull facts from the source repo (sLime Meet, Noona,
+Maven/SeaTunnel), draft here, push.
