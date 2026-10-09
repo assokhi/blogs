@@ -1,27 +1,29 @@
 ---
-title: "How This Blog Works: Markdown in Git, Published by Hashnode"
+title: "How This Blog Works: One Markdown File per Post"
 slug: how-this-blog-works
-tags: blogging, github, hashnode, markdown
-domain: assokhi.hashnode.dev
+date: 2026-10-09
+tags: blogging, github, markdown, nextjs
 ---
 
-Every post on this blog is a single Markdown file in a GitHub repo. There's no CMS, build step, or site generator. I push a file, and it shows up here and on my portfolio.
+Every post on this blog is a single Markdown file in a GitHub repo. There's no CMS, database, or paid platform. I push a file, and my portfolio turns it into a page.
 
 ## The pipeline
 
 ```text
-blogs repo (.md file)
-   │  push
+blogs repo (one .md file per post)
+   │  push, then rebuild the portfolio
    ▼
-Hashnode GitHub app  ──publishes──▶  assokhi.hashnode.dev
-                                          │  rss.xml
-                                          ▼
-                              portfolio /blog page (read at build time)
+portfolio build (Next.js static export on Cloudflare Workers)
+   │  GitHub API: list the .md files, download each one
+   │  marked: Markdown → HTML
+   ▼
+/blog              list of every post
+/blog/<slug>       one static page per post
 ```
 
 1. I write a post as a `.md` file in the root of the `blogs` repo.
-2. The Hashnode GitHub app watches the branch and publishes the file.
-3. My portfolio reads the Hashnode RSS feed when it builds and lists the post.
+2. When the portfolio builds, it reads every `.md` file from that repo.
+3. Each post becomes a plain HTML page. Nothing runs when someone reads it.
 
 ## One file = one post
 
@@ -31,23 +33,24 @@ The frontmatter at the top of the file is all the configuration a post needs:
 ---
 title: Your title
 slug: your-slug
+date: 2026-10-09
 tags: testing, programming
-domain: assokhi.hashnode.dev
 ---
 ```
 
-| Field    | What it does                                        |
-| -------- | --------------------------------------------------- |
-| `title`  | Post title                                          |
-| `slug`   | URL path. The same slug updates the existing post.  |
-| `tags`   | Up to 5 Hashnode tag slugs, comma-separated         |
-| `domain` | Which Hashnode blog to publish to                   |
-| `cover`  | Optional cover image URL                            |
+| Field   | What it does                                                 |
+| ------- | ------------------------------------------------------------ |
+| `title` | Post title (required)                                        |
+| `date`  | Publish date, `YYYY-MM-DD` (required); newest posts go first |
+| `slug`  | URL path. Defaults to the file name.                         |
+| `tags`  | Comma-separated tags shown under the title                   |
+
+The first paragraph becomes the summary on the post card.
 
 ## Why this setup
 
 - **Git history is the edit history.** Every change to a post is a commit I can diff or revert.
 - **Writing in my editor.** Same tools I use for code.
-- **No lock-in.** If I leave Hashnode, the posts are plain Markdown files I already own.
+- **Free and portable.** No blogging platform to pay for or migrate off. The posts are plain Markdown files I already own.
 
-Next post: the ~20 lines of TypeScript that pull these posts onto my portfolio.
+Next post: the code that turns this repo into pages on my portfolio.

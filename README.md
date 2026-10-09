@@ -1,38 +1,35 @@
 # blogs
 
-Content-only repo synced to Hashnode via the Hashnode GitHub app. No build step, no site generator.
+Content-only repo. Every `.md` file in the **repo root** is a post. My portfolio
+(`assokhi/myPortfolio`) reads them at build time and renders them at `/blog/<slug>`.
+No build step here.
 
-## Setup
-1. Hashnode → Dashboard → your blog → GitHub → install the app on this repo, pick the branch.
-2. Push posts. Hashnode publishes them; edits in its web editor commit back here.
-
-## Rules (from Hashnode docs; verify against the app's setup screen)
-- One post = one `.md` file in the **repo root**. Subfolders are ignored, so anything that is
-  not a post (drafts, notes, templates) goes in a subfolder.
-- Frontmatter: `title`, `slug`, `tags` (comma-separated tag slugs, max 5), `domain`
-  (your `*.hashnode.dev` or custom domain), optional `cover` (image URL).
-- Same `slug` = update the existing post. Change both file path and slug = new post.
-- Images: Hashnode's docs say to use URLs from its uploader. Relative paths into `images/`
-  are unverified. Test with one post before relying on them.
-- Unverified: whether Hashnode renders `mermaid` blocks and `> [!NOTE]` callouts. Check the preview.
+## Rules
+- One post = one `.md` file in the repo root. Subfolders and `README.md` are ignored, so
+  drafts, notes, and templates go in a subfolder.
+- Frontmatter: `title` and `date` (`YYYY-MM-DD`) are required. A post without them
+  fails the portfolio build. Optional: `slug` (defaults to the file name) and `tags`
+  (comma-separated).
+- The first paragraph becomes the summary on the post card.
+- Images: use absolute URLs. Relative paths won't resolve on the portfolio.
 
 ## Post template
 ```md
 ---
 title: Your title
 slug: your-slug
+date: 2026-10-09
 tags: testing, programming
-domain: assokhi.hashnode.dev
-cover: https://cdn.hashnode.com/...
 ---
 
-Intro paragraph.
+Intro paragraph, used as the summary.
 
 ## Section
 
 Body.
 ```
 
-## Workflow
-One Claude session per post. Pull facts from the source repo (sLime Meet, Noona,
-Maven/SeaTunnel), draft here, push.
+## Publishing
+1. Push the post to `main`.
+2. Rebuild the portfolio: push to `myPortfolio`, or click **Retry build** on the latest
+   build in the Cloudflare dashboard (Workers → assokhi → Builds).
