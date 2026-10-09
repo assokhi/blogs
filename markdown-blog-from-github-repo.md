@@ -12,16 +12,23 @@ My portfolio is a Next.js static export served from Cloudflare Workers. My posts
 With `output: "export"`, server components run once, during `next build`. So the build can fetch the posts from GitHub, and the result is plain HTML:
 
 ```ts
+const API = "https://api.github.com/repos/assokhi/blogs";
+
 async function load(): Promise<Post[]> {
-  const res = await fetch("https://api.github.com/repos/assokhi/blogs/contents?ref=main", { headers });
+  // Resolve main to a commit first (more on this below)
+  const head = await fetch(`${API}/commits/main`, { headers: { Accept: "application/vnd.github.sha" } });
+  if (!head.ok) throw new Error(`GitHub commit lookup failed: ${head.status}`);
+  const sha = await head.text();
+
+  const res = await fetch(`${API}/contents?ref=${sha}`);
   if (!res.ok) throw new Error(`GitHub listing failed: ${res.status}`);
-  const files: { name: string; type: string; download_url: string }[] = await res.json();
+  const files: { name: string; type: string }[] = await res.json();
 
   const posts = await Promise.all(
     files
       .filter((f) => f.type === "file" && f.name.endsWith(".md") && f.name !== "README.md")
       .map(async (f) => {
-        const r = await fetch(f.download_url);
+        const r = await fetch(`https://raw.githubusercontent.com/assokhi/blogs/${sha}/${encodeURIComponent(f.name)}`);
         if (!r.ok) throw new Error(`${f.name}: ${r.status}`);
         const [meta, body] = parse(await r.text());
         if (!meta.title || !meta.date) throw new Error(`${f.name}: frontmatter needs title and date`);
@@ -32,10 +39,11 @@ async function load(): Promise<Post[]> {
 }
 ```
 
-The contents API gives one listing call for the whole repo, and each file comes with a `download_url` on `raw.githubusercontent.com`.
+That's two API calls per build worker: one to resolve `main`, one to list the repo. The file contents come from `raw.githubusercontent.com`, which doesn't count against the API limit.
 
 ## Choices worth explaining
 
+- **Pin the branch to a commit.** My first version downloaded files from `raw.githubusercontent.com/.../main/...`. A build right after a push failed: the API listed the new files, but the raw CDN served the old contents for up to 5 minutes (`Cache-Control: max-age=300`). URLs with a commit SHA never change, so they can't be stale.
 - **Failures throw.** If GitHub is down, the build fails and Cloudflare keeps serving the last good deploy. Returning `[]` would have shipped an empty blog.
 - **No frontmatter library.** The frontmatter is flat `key: value` lines, so a regex parses it. The only dependency is [`marked`](https://marked.js.org) for Markdown to HTML.
 - **One fetch per build worker.** The homepage, `/blog`, and every `/blog/<slug>` page all need the posts, so the promise is cached once per build worker:
