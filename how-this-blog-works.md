@@ -16,12 +16,12 @@ blogs repo (.md file)
 Hashnode GitHub app  ──publishes──▶  assokhi.hashnode.dev
                                           │  rss.xml
                                           ▼
-                              portfolio /blog page (refreshes hourly)
+                              portfolio /blog page (read at build time)
 ```
 
 1. I write a post as a `.md` file in the root of the `blogs` repo.
 2. The Hashnode GitHub app watches the branch and publishes the file.
-3. My portfolio reads the Hashnode RSS feed and lists the post.
+3. My portfolio reads the Hashnode RSS feed when it builds and lists the post.
 
 ## One file = one post
 

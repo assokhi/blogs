@@ -7,6 +7,8 @@ domain: assokhi.hashnode.dev
 
 I wanted my portfolio's `/blog` page to list my Hashnode posts. You could do this with an SDK, a GraphQL client, or a separate microservice, but you don't need any of them. Every Hashnode blog serves an RSS feed at `/rss.xml`, and a Next.js server component can read it directly.
 
+My portfolio is a static export (`output: "export"`) served from Cloudflare Workers, so the feed is read once, at build time. Each deploy produces a page of plain HTML with no runtime fetch.
+
 ## The fetch
 
 ```ts
@@ -19,7 +21,7 @@ const tag = (xml: string, name: string) =>
 
 export async function getPosts(limit?: number): Promise<Post[]> {
   try {
-    const res = await fetch(`${HASHNODE_URL}/rss.xml`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${HASHNODE_URL}/rss.xml`);
     if (!res.ok) return [];
     const xml = await res.text();
     return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, limit).map(([, item]) => ({
@@ -36,8 +38,8 @@ export async function getPosts(limit?: number): Promise<Post[]> {
 
 A few choices worth explaining:
 
-- **`revalidate: 3600`**: Next.js caches the feed for an hour, so Hashnode gets at most one request per hour, not one per visitor.
-- **Failures return `[]`**: if Hashnode is down, the page shows "No posts yet" and the rest of the site still loads.
+- **Build-time fetch**: Hashnode gets one request per deploy, not one per visitor. The trade-off is that a new post shows up on the portfolio after the next rebuild.
+- **Failures return `[]`**: if Hashnode is down during a build, the page shows "No posts yet" and the build still succeeds.
 - **Regex instead of an XML parser**: the feed's shape is fixed, so a regex avoids adding a dependency. If the shape ever changes, I'll swap in a parser.
 
 ## One component, two pages
